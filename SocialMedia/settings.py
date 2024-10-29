@@ -27,22 +27,13 @@ SECRET_KEY = "django-insecure-(e&binj(0e1#8xcn*p!ek^-80=(+=x=i50=v4sqn+yx%u_x5^g
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = [".fly.dev"]
+ALLOWED_HOSTS = [".onrender.com"]
 
 LOGIN_URL = "/login/"
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "http://192.168.43.159:8000",
-    "http://192.168.224.159:8000",
-]
+CORS_ALLOWED_ORIGINS = ["https://joetex.onrender.com"]
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://yourdomain.com',
-    'https://sub.yourdomain.com',
-    'https://anotherdomain.com',
-]
+CSRF_TRUSTED_ORIGINS = ["https://joetex.onrender.com"]
 
 WHITENOISE_ALLOW_ALL_ORIGINS = True
 
@@ -74,7 +65,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 ROOT_URLCONF = "SocialMedia.urls"
 
