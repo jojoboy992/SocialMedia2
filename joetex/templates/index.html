@@ -1,0 +1,802 @@
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joetex</title>
+    <link rel="stylesheet" href="{% static 'css/index.css' %}"> 
+    <link rel="shortcut icon" href="{% static 'imgs/logo.png' %}" type="image/x-icon">
+
+    <style>
+        @font-face {
+    font-family: 'Joetex';
+    src: url('{% static "fonts/joetex.otf" %}') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+
+.confirm_delete_btn , .delete_btn{
+    background: red;
+    width: 100px;
+    height: 30px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    color: #ffffff;
+}
+
+.cancel_btn{
+    background: green;
+    width: 100px;
+    height: 30px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    color: #ffffff;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #ccc;
+    width: 80%; /* Could be more or less, depending on screen size */
+}
+
+.close {
+    color: #000000;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+    </style>
+</head>
+<body>
+    
+    <!-- <a href="{% url 'logout' %}">Log out</a> -->
+
+    <nav>
+        <a href="{% url 'home' %}" style="text-decoration: none; color: black;" class="home_link">
+            <div class="logo_div">
+            <img src="{% static 'imgs/logo.png' %}" alt="">
+            <h1>Joetex</h1>
+         </div>
+        </a>
+        <div class="nav_links"><a href="{% url 'home' %}"><img src="{% static 'imgs/home.png' %}" alt="home" class="nav_img"><p>Home</p></a></div>
+        <div class="nav_links"><a href="{% url 'user_search' %}"><img src="{% static 'imgs/search.png' %}" alt="search" class="nav_img"><p>Search</p></a></div>
+        <div class="nav_links"><a href="{% url 'chat_view' user.username %}"><img src="{% static 'imgs/messages.png' %}" alt="messages" class="nav_img"><p>Messages</p></a></div>
+        <div class="nav_links"><a href="{% url 'post_new' %}"><img src="{% static 'imgs/post.png' %}" alt="post" class="nav_img"><p>Post</p></a></div>
+        <div class="nav_links">
+            <a href="{% url 'profile' username=user.username %}">
+                {% if user_profile_picture %}
+                <img src="{{ user_profile_picture }}" alt="user_profile" class="nav_img" style="border-radius: 100%;">
+            {% else %}
+                <img src="{% static 'imgs/profile.png' %}" alt="user_profile" class="nav_img" style="border-radius: 100%;">
+            {% endif %}
+            <p>Profile</p>
+            </a>
+        </div>
+        <div class="nav_links" id="more_options"><a href="#"><img src="{% static 'imgs/menu.png' %}" alt="more" class="nav_img"><p>More</p></a></div>
+    </nav>
+
+    <div class="more_options_div" id="more_options_div">
+        <!-- click to toggle between light and dark mode -->
+        <div class="light_dark_mode">
+            <img src="{% static 'imgs/sun.png' %}" alt="user" class="light_mode" width="25px" height="25px">
+            <p style="color: black  !important;">Switch appearance</p>
+        </div>
+        <div class="problem_div">
+            <img src="{% static 'imgs/problem.png' %}" alt="user" class="problem_img"  width="18px" height="18px">
+            <p style="color: black  !important;">Report a problem</p>
+        </div>
+
+        <a href="{% url 'logout' %}" style="text-decoration: none; color: black;">
+        <div class="logout_div">
+            <img src="{% static 'imgs/logout.png' %}" alt="user" class="logout_img"  width="18px" height="18px">
+            <p>Logout</p>
+        </div>
+    </a>
+    </div>
+
+    <div class="users">
+        {% for follower in followers %}
+            <a href="{% url 'profile' follower.username %}">
+                {% if follower.profile.profile_picture %}
+                    <img src="{{ follower.profile.profile_picture.url }}" alt="{{ follower.username }}" class="users_img">
+                {% else %}
+                    <img src="{% static 'imgs/profile.png' %}" alt="user" class="users_img">
+                {% endif %}
+            </a>
+        {% empty %}
+            <p style="color: red; text-align: center;">You have no followers yet</p>
+        {% endfor %}
+    </div>
+    
+    
+    
+
+        {% for post in posts %}
+    <div class="post_div">
+        <div class="user_pic_profile">
+            {% if post.author.profile.profile_picture %}
+                <img src="{{ post.author.profile.profile_picture.url  }}" alt="user_profile" class="profile_pic">
+            {% else %}
+                <img src="{% static 'imgs/profile.png' %}" alt="user_profile" class="profile_pic">
+            {% endif %}
+            <h3 class="profile_name">
+                <a href="{% url 'profile' post.author.username %}">{{ post.author.username }}</a>
+            </h3>
+            <p class="post_time"><span class="post_time_span">&dot;</span> {{ post.time_since_creation }}</p>
+        </div>
+
+        {% if request.user == post.author %}
+            <img src="{% static 'imgs/dots.png' %}" alt="user_profile" class="options" id="show_delete_btn_{{ post.id }}" onclick="openDeleteModal({{ post.id }})">
+        {% endif %}
+
+        
+        <div id="deleteModal{{ post.id }}" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close" onclick="closeDeleteModal({{ post.id }})">&times;</span>
+                <p>You want to delete this post?</p>
+                <button onclick="openConfirmModal({{ post.id }})" class="delete_btn">Yes</button>
+                <button onclick="closeDeleteModal({{ post.id }})" class="cancel_btn">Cancel</button>
+            </div>
+        </div>
+        
+        <!-- Second Modal (confirmation modal) -->
+        <div id="confirmModal{{ post.id }}" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close" onclick="closeConfirmModal({{ post.id }})">&times;</span>
+                <p>Do you confirm to delete this post?</p>
+                <form method="post" action="{% url 'post_delete' post.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="confirm_delete_btn">Yes, Delete</button>
+                    <button type="button" onclick="closeConfirmModal({{ post.id }})" class="cancel_btn">No, Dont</button>
+                </form>
+            </div>
+        </div>
+
+        {% if post.image %}
+            <img src="{{ post.image.url }}" alt="post title" class="post_img_video">
+        {% elif post.video %}
+        <video controls class="post_img_video">
+            <source src="{{ post.video.url }}" type="video/mp4" class="post_img_video">
+            Your browser does not support the video tag.
+        </video>
+        {% endif %}
+
+        <div class="actions_div">
+            <input type="hidden" id="csrf_token" value="{{ csrf_token }}">
+            <img src="{% if post.is_liked %}{% static 'imgs/liked.png' %}{% else %}{% static 'imgs/un_liked.png' %}{% endif %}" 
+                 alt="Like" class="actions like-button" data-post-id="{{ post.id }}" 
+                 data-liked-src="{% static 'imgs/liked.png' %}" 
+                 data-unliked-src="{% static 'imgs/un_liked.png' %}">
+            <img src="{% static 'imgs/comments.png' %}" alt="Comments" class="actions" data-target="comment_section_{{ post.id }}">
+            <img src="{% static 'imgs/share.png' %}" alt="Share" class="actions">
+        </div>
+
+        <p class="likes" data-post-id="{{ post.id }}">{{ post.like_count }} Likes</p>
+
+        <div class="caption">
+            <h5>{{ post.author.username }}</h5>
+            <p>{{ post.title }}</p>
+        </div>
+        {% if post.comment_count == 0 %}
+        <h5 class="comments">{{ post.comment_count }} Comments</h5>
+        {% else %}
+        <h5 class="comments" data-target="comment_section_{{ post.id }}">View {{ post.total_comments_count }} comments</h5>
+        {% endif %}
+            
+    </div>
+
+   <!-- Modal containing both the main comment and reply comments -->
+<div class="comment_section_div" id="comment_section_{{ post.id }}">
+    {% if post.image %}
+        <img src="{{ post.image.url }}" alt="post title" class="user_post">
+    {% elif post.video %}
+    <video controls class="user_post">
+        <source src="{{ post.video.url }}" type="video/mp4"  class="user_post">
+        Your browser does not support the video tag.
+    </video>
+    {% endif %}
+
+    <!-- Main Comment Section -->
+    <div class="comment_section" id="main_comment_section_{{ post.id }}">
+        <div class="comment_section_comments">
+            <div class="post_caption">
+                {% if post.author.profile.profile_picture %}
+                    <img src="{{ post.author.profile.profile_picture.url }}" alt="user_profile" class="profile_pic">
+                {% else %}
+                    <img src="{% static 'imgs/profile.png' %}" alt="user_profile" class="profile_pic">
+                {% endif %}
+                <h4 class="post_caption_username" style="color: black !important;">{{ post.author.username }}</h4>
+                <h4 class="post_caption_text" style="color: black !important;">{{ post.title }}</h4>
+            </div>
+    
+            <hr class="separator">
+    
+            <!-- Logic for displaying main comments -->
+            {% for comment in post.comments_list %}
+                {% if not comment.parent_comment %}  <!-- Check if there is no parent -->
+                    <div class="comment_posts" id="comment_{{ comment.id }}" data-post-id="{{ post.id }}">
+                        {% if comment.profile.profile_picture %}
+                        <a href="{% url 'profile' comment.profile.user.username %}" style="text-decoration: none; color: black;"> <img src="{{ comment.profile.profile_picture.url }}" alt="user" class="user_comment_profile"> </a>
+                        {% else %}
+                        <a href="{% url 'profile' comment.profile.user.username %}" style="text-decoration: none; color: black;">  <img src="{% static 'imgs/profile.png' %}" alt="user" class="user_comment_profile"> </a>
+                        {% endif %}
+                        <a href="{% url 'profile' comment.profile.user.username %}" style="text-decoration: none; color: black;"><h4 class="user_comments_username" style="color: black !important;">{{ comment.profile.user.username }}</h4></a>
+                        <h4 class="user_comments" style="color: black !important;">{{ comment.content }}</h4>
+    
+                        <div class="comment_like" onclick="toggleCommentLike(event, this)" data-comment-id="{{ comment.id }}">
+                            <svg class="heart {% if comment.is_liked %}liked{% endif %}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="15" height="15">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                        </div>
+                        
+                        <div class="comment_details">
+                            <p class="comment_post_time">{{ comment.time_since_creation }}</p>
+                            <p class="comment_like_counter">{{ comment.like_count }} Likes</p>
+                            {% if comment.reply_count == 0 %}
+                                <p class="reply" data-target="reply_section_{{ comment.id }}">View replies</p>
+                            {% else %}
+                                <p class="reply" data-target="reply_section_{{ comment.id }}">{{ comment.reply_count }}</p>
+                            {% endif %}
+                            <p class="more_options">&hellip;</p>
+                        </div>
+                    </div>
+                {% endif %}
+            {% empty %}
+                <p style="color: red; text-align: center; position: absolute; top: 40%; left: 40%;" class="no_comment">No comments yet.</p>
+            {% endfor %}
+        </div>
+    
+        <form action="{% url 'add_comment' %}" method="post" class="comment_form" data-post-id="{{ post.id }}" id="comment_form_{{ post.id }}">
+            {% csrf_token %}
+            <input type="hidden" name="post_id" value="{{ post.id }}">
+            <input type="text" name="content" placeholder="Enter Comment..." class="comment_input" required>
+        </form>
+    </div>
+    
+
+    <!-- Comment Reply Sections -->
+    {% for comment in post.comments_list %}
+    <div class="comment_reply_section" id="reply_section_{{ comment.id }}" data-post-id="{{ post.id }}" style="display:none;"> <!-- Initially hidden -->
+        <div class="comment_section_replies">
+            <div class="highlighted_reply">
+                <h1 style="cursor: pointer; color: black !important;" class="back" >&larr;</h1>
+                <img src="{% static 'imgs/profile.png' %}" alt="user" class="highlighted_reply_pic">
+                <h4 class="highlighted_reply_username" style="color: black !important;">Replies to: {{ comment.user.username }}</h4> <!-- Corrected reference -->
+                <h4 class="highlighted_reply_text" style="color: black !important;">{{ comment.content }}</h4>
+            </div>
+    
+            <hr class="reply_separator">
+    
+            <!-- Logic for displaying reply comments -->
+            {% for reply in comment.replies.all  %}  <!-- Changed to use pre-fetched replies -->
+            <div class="reply_posts">
+                <a href="{% url 'profile' reply.user.username %}" style="text-decoration: none; color: black;">
+                    {% if reply.user.profile.profile_picture %}
+                        <img src="{{ reply.user.profile.profile_picture.url }}" alt="user_profile" class="user_comment_profile">
+                    {% else %}
+                        <img src="{% static 'imgs/profile.png' %}" alt="user_profile" class="user_comment_profile">
+                    {% endif %}
+                </a>
+                <a href="{% url 'profile' reply.user.username %}" style="text-decoration: none; color: black;">
+                    <h4 class="user_comments_username" style="color: black !important;">{{ reply.user.username }}</h4>
+                </a>
+                <h4 class="user_comments">{{ reply.content }}</h4>
+                <div class="reply_actions_div">
+                    <svg class="reply_heart {% if reply.is_liked %}liked{% endif %}" data-reply-id="{{ reply.id }}" data-liked="{{ reply.is_liked }}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="15" height="15">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+                    </svg>
+                </div>
+                
+                <div class="comment_details">
+                    <p class="comment_post_time">{{ reply.time_since_creation }}</p>
+                    <p class="comment_like_counter" data-reply-id="{{ reply.id }}">{{ reply.like_count }} Likes</p> <!-- Displays the like count -->
+                    <p class="more_options">&hellip;</p>
+                </div>
+            </div>
+            {% empty %}
+                <p style="color: red; text-align: center; position: absolute; top: 40%; left: 40%;" class="no_reply">No replies yet.</p>
+            {% endfor %}
+        </div>
+        <form action="{% url 'add_reply' post.id %}" method="post" class="reply_form" data-comment-id="{{ comment.id }}" id="reply_form_{{ comment.id }}">
+            {% csrf_token %}
+            <input type="hidden" name="post_id" value="{{ post.id }}">
+            <input type="hidden" name="parent_comment_id" value="{{ comment.id }}">
+            <input type="text" name="reply_content" placeholder="Add a reply..." class="reply_input" required>
+        </form>
+    </div>
+    {% endfor %}
+    
+
+    <span class="close" style="color: black !important;">&times;</span>
+</div>
+
+
+    {% endfor %}
+
+    <div class="followers_div">
+        <h2 style="color: red;">Users you follow</h2>
+        <div class="followers">
+            {% for user in following_users %}
+                <div class="followers_profile">
+                    {% if user.profile.profile_picture %}
+                        <a href="{% url 'profile' user.username %}" style="text-decoration: none; color: black;">
+                            <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}" class="followers_img">
+                        </a>
+                    {% else %}
+                        <a href="{% url 'profile' user.username %}" style="text-decoration: none; color: black;">
+                            <img src="{% static 'imgs/profile.png' %}" alt="user" class="followers_img">
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'profile' user.username %}" style="text-decoration: none; color: black;">
+                        <h5>{{ user.username }}</h5>
+                    </a>
+                    <form action="{% url 'unfollow' user.username %}" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="from_page" value="following_list">
+                        <button type="submit" class="unfollow_btn">Unfollow</button>
+                    </form>
+                </div>
+            {% empty %}
+                <p style="color: red; font-size: 15px;">You are not following anyone yet!</p>
+            {% endfor %}
+        </div>
+    </div>
+    
+    
+    
+    
+    
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
+    <script src="{% static 'js/index.js' %}"></script>
+
+    <script>
+
+function openDeleteModal(postId) {
+    document.getElementById("deleteModal" + postId).style.display = "block";
+}
+
+function closeDeleteModal(postId) {
+    document.getElementById("deleteModal" + postId).style.display = "none";
+}
+
+function openConfirmModal(postId) {
+    closeDeleteModal(postId); // Close the first modal
+    document.getElementById("confirmModal" + postId).style.display = "block"; // Open confirm modal
+}
+
+function closeConfirmModal(postId) {
+    document.getElementById("confirmModal" + postId).style.display = "none";
+}
+
+// Close modals when clicking outside of the modal content
+window.onclick = function(event) {
+    var deleteModal = document.getElementById("deleteModal" + event.target.dataset.postId);
+    var confirmModal = document.getElementById("confirmModal" + event.target.dataset.postId);
+    if (event.target == deleteModal) {
+        closeDeleteModal(event.target.dataset.postId);
+    }
+    if (event.target == confirmModal) {
+        closeConfirmModal(event.target.dataset.postId);
+    }
+}        
+
+document.addEventListener("DOMContentLoaded", function() {
+    const toggleButton = document.querySelector('.light_dark_mode');
+    const nav = document.querySelector('nav'); // Select your nav element
+    const links = document.querySelectorAll('.nav_links a'); // Select all nav links
+    
+    // Check localStorage for user's preference
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+        nav.classList.add('dark-mode'); // Add dark mode to nav
+        links.forEach(link => link.classList.add('dark-mode')); // Add dark mode to links
+        document.body.classList.remove('light-mode');
+        const sunIcon = document.querySelector('.light_mode');
+        sunIcon.src = "{% static 'imgs/moon.png' %}"; // Change to moon icon
+    }
+
+    toggleButton.addEventListener('click', function() {
+        document.body.classList.toggle('dark-mode');
+        nav.classList.toggle('dark-mode'); // Toggle dark mode for nav
+
+        // Toggle dark mode for links
+        links.forEach(link => {
+            link.classList.toggle('dark-mode'); // Toggle dark mode class on links
+        });
+
+        document.body.classList.toggle('light-mode');
+
+        // Update localStorage based on the current mode
+        if (document.body.classList.contains('dark-mode')) {
+            localStorage.setItem('theme', 'dark');
+            const sunIcon = document.querySelector('.light_mode');
+            sunIcon.src = "{% static 'imgs/moon.png' %}"; // Change to moon icon
+        } else {
+            localStorage.setItem('theme', 'light');
+            const sunIcon = document.querySelector('.light_mode');
+            sunIcon.src = "{% static 'imgs/sun.png' %}"; // Change back to sun icon
+        }
+    });
+});
+
+
+
+function updateCommentCount(postId) {
+    $.ajax({
+        url: `/post/${postId}/comment_count/`,
+        method: 'GET',
+        success: function(response) {
+            $('#comment-count-' + postId).text(response.comment_count);
+        }
+    });
+}
+
+function updateReplyCount(commentId) {
+    $.ajax({
+        url: `/comment/${commentId}/reply_count/`,
+        method: 'GET',
+        success: function(response) {
+            $('#reply-count-' + commentId).text(response.reply_count);
+        }
+    });
+}
+        
+        function toggleCommentLike(event, element) {
+    event.preventDefault();  // Prevent default behavior
+    const commentId = element.getAttribute("data-comment-id");
+    const likeCountSpan = element.nextElementSibling.querySelector(".comment_like_counter");
+    const heartIcon = element.querySelector(".heart");
+
+    fetch(`/like_comment/${commentId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCSRFToken(),  // Ensure this function exists and returns the CSRF token
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Response Data:", data);  // Log the data received
+        if (data.error) {
+            alert(data.error);
+        } else {
+            // Update the like count
+            if (likeCountSpan) {
+                likeCountSpan.textContent = `${data.count} Likes`;  // Update likes display
+            }
+            // Toggle the 'liked' class
+            heartIcon.classList.toggle("liked", data.liked);
+            console.log("Like status updated:", data.liked, "New count:", data.count);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+
+document.querySelectorAll(".reply_heart").forEach(heartIcon => {
+    heartIcon.addEventListener("click", function () {
+        const replyId = this.dataset.replyId;
+        const isLiked = this.dataset.liked === "true";
+        const likeCounter = document.querySelector(`.comment_like_counter[data-reply-id="${replyId}"]`);
+
+        fetch(`/like-reply/${replyId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.liked) {
+                this.classList.add("liked");  // Add class for styling if liked
+                this.dataset.liked = "true";
+            } else {
+                this.classList.remove("liked");  // Remove class for styling if unliked
+                this.dataset.liked = "false";
+            }
+            // Update like count
+            likeCounter.textContent = `${data.like_count} Likes`;
+        });
+    });
+});
+
+
+
+// Function to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
+// CSRF Token helper function (only if needed)
+function getCSRFToken() {
+    let cookieValue = null;
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith('csrftoken=')) {
+            cookieValue = cookie.substring('csrftoken='.length);
+            break;
+        }
+    }
+    return cookieValue;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const replyForms = document.querySelectorAll('.reply_form');
+
+    replyForms.forEach(form => {
+        form.addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const postData = new FormData(form); // Gather form data
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true; // Disable button
+            submitButton.textContent = 'Submitting...'; // Change button text
+
+            // Send the POST request via fetch
+            fetch(form.action, {
+                method: 'POST',
+                body: postData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const replySection = form.closest('.comment_reply_section').querySelector('.comment_section_replies');
+                    const newReply = `
+                        <div class="reply_posts">
+                            <img src="${data.profile_picture}" alt="user" class="user_comment_profile">
+                            <h4 class="user_comments_username">${data.username}</h4>
+                            <h4 class="user_comments">${data.reply_content}</h4>
+                            <div class="comment_like">
+                                <svg class="heart" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="15" height="15">
+                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                </svg>
+                            </div>
+                            <div class="comment_details">
+                                <p class="comment_post_time">Just now</p> <!-- Update as necessary -->
+                                <p class="comment_like_counter">0 Likes</p>
+                                <p class="more_options">&hellip;</p>
+                            </div>
+                        </div>
+                    `;
+                    replySection.insertAdjacentHTML('beforeend', newReply); // Add new reply to the DOM
+                    form.reset(); // Clear the form after submission
+                } else {
+                    const errorMessage = document.createElement('div');
+                    errorMessage.classList.add('error-message');
+                    errorMessage.textContent = data.error; 
+                    replySection.prepend(errorMessage); // Show error message
+                    setTimeout(() => errorMessage.remove(), 5000); // Auto-remove after 5 seconds
+                }
+            })
+            .catch(error => console.error('Error:', error))
+            .finally(() => {
+                submitButton.disabled = false; // Re-enable button
+                submitButton.textContent = 'Reply'; // Reset button text
+            });
+        });
+    });
+});
+
+    </script>
+
+    <script>
+        function initializeReplyButtons() {
+  document.querySelectorAll(".reply").forEach((replyButton) => {
+    replyButton.addEventListener("click", function (event) {
+      let targetId = event.target.getAttribute("data-target"); // Get the target reply section ID
+      let replySection = document.getElementById(targetId); // Select the corresponding reply section
+      let postId = event.target.closest(".comment_posts").getAttribute("data-post-id"); // Get the post ID
+      console.log("Post ID:", postId); // Check the post ID
+      let commentSection = document.getElementById("main_comment_section_" + postId); // Get the main comment section for the specific post
+
+      // Debugging: Log the IDs being accessed
+      console.log(`Target ID: ${targetId}, Post ID: ${postId}`);
+      console.log(`Reply Section: ${replySection}, Comment Section: ${commentSection}`);
+
+      // Check if both replySection and commentSection exist
+      if (replySection && commentSection) {
+        replySection.style.display = "grid"; // Open the respective reply section
+        commentSection.style.display = "none"; // Hide the main comment section for that specific post
+      } else {
+        console.error("Either replySection or commentSection was not found.");
+        // Additional error handling (optional)
+        if (!replySection) {
+          console.error(`Reply section with ID ${targetId} does not exist.`);
+        }
+        if (!commentSection) {
+          console.error(`Comment section with ID main_comment_section_${postId} does not exist.`);
+        }
+      }
+    });
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  
+  // Handle comment submission
+  document.querySelectorAll(".comment_form").forEach((form) => {
+    form.addEventListener("submit", function (event) {
+      event.preventDefault(); // Prevent the default form submission
+
+      const formData = new FormData(this); // Get the form data
+
+      fetch(this.action, {
+        method: "POST",
+        body: formData,
+        headers: {
+          "X-CSRFToken": "{{ csrf_token }}", // Ensure this is set correctly
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            const commentSection = this.closest(".comment_section").querySelector(".comment_section_comments");
+
+            // Create new comment elements using DOM API
+            const commentDiv = document.createElement("div");
+            commentDiv.className = "comment_posts";
+            commentDiv.id = `comment_${data.comment.id}`;
+            commentDiv.setAttribute("data-post-id", data.comment.id);
+
+            // Profile Picture
+            const profileImg = document.createElement("img");
+            profileImg.src = data.comment.profile_picture;
+            profileImg.alt = "user";
+            profileImg.className = "user_comment_profile";
+            commentDiv.appendChild(profileImg);
+
+            // Username
+            const usernameH4 = document.createElement("h4");
+            usernameH4.className = "user_comments_username";
+            usernameH4.textContent = data.comment.username;
+            commentDiv.appendChild(usernameH4);
+
+            // Comment Content
+            const contentH4 = document.createElement("h4");
+            contentH4.className = "user_comments";
+            contentH4.textContent = data.comment.content;
+            commentDiv.appendChild(contentH4);
+
+            // Comment Details
+            const detailsDiv = document.createElement("div");
+            detailsDiv.className = "comment_details";
+
+            // Post Time
+            const postTimeP = document.createElement("p");
+            postTimeP.className = "comment_post_time";
+            postTimeP.textContent = data.comment.post_time;
+            detailsDiv.appendChild(postTimeP);
+
+            // Like Counter
+            const likeCounterP = document.createElement("p");
+            likeCounterP.className = "comment_like_counter";
+            likeCounterP.textContent = `${data.comment.likes} Likes`;
+            detailsDiv.appendChild(likeCounterP);
+
+            // Reply Section
+            const replyP = document.createElement("p");
+            replyP.className = "reply";
+            replyP.setAttribute("data-target", `reply_section_${data.comment.id}`);
+            replyP.textContent = "Reply";
+            detailsDiv.appendChild(replyP);
+
+            commentDiv.appendChild(detailsDiv);
+
+            // Reply Section
+            const replySectionDiv = document.createElement("div");
+            replySectionDiv.id = `reply_section_${data.comment.id}`;
+            replySectionDiv.style.display = "none"; // Initially hidden
+            commentDiv.appendChild(replySectionDiv);
+
+            // Append the new comment to the comment section
+            commentSection.appendChild(commentDiv); 
+
+            this.reset(); // Reset the form
+
+            // Reinitialize reply button functionality for the newly added comment
+            setTimeout(initializeReplyButtons, 1);
+          }
+        })
+        .catch((error) => console.error("Error:", error));
+    });
+  });
+
+  // Initialize reply buttons on page load
+  setTimeout(initializeReplyButtons, 1);
+
+  // Open comment section modal
+  document.body.addEventListener("click", function (event) {
+    if (event.target.classList.contains("comments") || event.target.classList.contains("actions")) {
+      let targetId = event.target.getAttribute("data-target"); // Get the target comment section ID
+      let comment_section_div = document.getElementById(targetId); // Select the corresponding comment section
+  
+      if (comment_section_div) {
+        comment_section_div.style.display = "flex"; // Open the respective comment section
+      }
+    }
+  });
+
+  // Close comment section modal
+  document.body.addEventListener("click", function (event) {
+    if (event.target.classList.contains("close")) {
+        let comment_section_div = event.target.closest(".comment_section_div"); // Get the closest comment section
+
+        if (comment_section_div) {
+            comment_section_div.style.display = "none"; // Close the respective comment section
+            location.reload(); // Refresh the page
+        }
+    }
+});
+
+  // Go back to main comment section
+  document.body.addEventListener("click", function (event) {
+    if (event.target.classList.contains("back")) {
+      let replySection = event.target.closest(".comment_reply_section"); // Get the closest reply section
+      let postId = replySection.getAttribute("data-post-id"); // Get the post ID from the reply section
+      let commentSection = document.getElementById("main_comment_section_" + postId); // Get the main comment section for that specific post
+
+      // Check if both replySection and commentSection exist
+      if (replySection && commentSection) {
+        replySection.style.display = "none"; // Close the respective reply section
+        commentSection.style.display = "grid"; // Show the main comment section for that specific post
+      } else {
+        console.error("Either replySection or commentSection was not found.");
+        // Additional error handling (optional)
+        if (!replySection) {
+          console.error(`Reply section with ID ${replySection.id} does not exist.`);
+        }
+        if (!commentSection) {
+          console.error(`Comment section with ID main_comment_section_${postId} does not exist.`);
+        }
+      }
+    }
+  });
+});
+    </script>
+</body>
+</html>

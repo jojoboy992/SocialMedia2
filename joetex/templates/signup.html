@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Jotex</title>
+    <link rel="stylesheet" href="{% static 'css/signup.css' %}"> 
+    <link rel="shortcut icon" href="{% static 'imgs/logo.png' %}" type="image/x-icon">
+    <style>
+        .error {
+            color: red;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup_div">
+        <div class="logo_div">
+        <img src="{% static 'imgs/logo.png' %}" alt="">
+        <h1>Joetex</h1>
+    </div>
+    <h1>Sign Up</h1>
+    <form method="post">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+            <div class="error">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        {% for field in form %}
+            <div>
+                {{ field.label }}: {{ field }}
+                {% if field.errors %}
+                    <div class="error">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <button type="submit">Sign Up</button>
+        <p>Already have an account? <a href="{% url 'login' %}">Log in</a></p>
+    </form>
+</div>
+</body>
+</html>

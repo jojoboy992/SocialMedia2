@@ -1,0 +1,182 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Users - Joetex</title>
+    <link rel="shortcut icon" href="{% static 'imgs/logo.png' %}" type="image/x-icon">
+    <link rel="stylesheet" href="{% static 'css/user_search.css' %}"> 
+
+    <style>
+        @font-face {
+    font-family: 'Joetex';
+    src: url('{% static "fonts/joetex.otf" %}') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+    </style>
+</head>
+<body>
+    
+    <nav>
+        <a href="{% url 'home' %}" style="text-decoration: none; color: black;" class="home_link">
+            <div class="logo_div">
+            <img src="{% static 'imgs/logo.png' %}" alt="">
+         </div>
+        </a>
+        <div class="nav_links"><a href="{% url 'home' %}"><img src="{% static 'imgs/home.png' %}" alt="home" class="nav_img"></a></div>
+        <div class="nav_links"><a href="{% url 'user_search' %}"><img src="{% static 'imgs/search.png' %}" alt="search" class="nav_img"></a></div>
+        <div class="nav_links"><a href="{% url 'chat_view' user.username%}"><img src="{% static 'imgs/messages.png' %}" alt="messages" class="nav_img"></a></div>
+        <div class="nav_links"><a href="{% url 'post_new' %}"><img src="{% static 'imgs/post.png' %}" alt="post" class="nav_img"></a></div>
+        <div class="nav_links">
+            <a href="{% url 'profile' username=user.username %}">
+                {% if user_profile_picture %}
+                <img src="{{ user_profile_picture }}" alt="user_profile" class="nav_img" style="border-radius: 100%;">
+            {% else %}
+                <img src="{% static 'imgs/profile.png' %}" alt="user_profile" class="nav_img" style="border-radius: 100%;">
+            {% endif %}
+            </a>
+        </div>
+        <div class="nav_links" id="more_options"><a href="#"><img src="{% static 'imgs/menu.png' %}" alt="more" class="nav_img"></a></div>
+    </nav>
+
+    <div class="more_options_div" id="more_options_div">
+        <div class="light_dark_mode">
+            <img src="{% static 'imgs/sun.png' %}" alt="user" class="light_mode" width="25px" height="25px">
+            <p style="color: black !important;">Switch appearance</p>
+        </div>
+        <div class="problem_div">
+            <img src="{% static 'imgs/problem.png' %}" alt="user" class="problem_img"  width="18px" height="18px">
+            <p style="color: black !important;">Report a problem</p>
+        </div>
+
+        <a href="{% url 'logout' %}" style="text-decoration: none; color: black;">
+        <div class="logout_div">
+            <img src="{% static 'imgs/logout.png' %}" alt="user" class="logout_img"  width="18px" height="18px">
+            <p style="color: black !important;">Logout</p>
+        </div>
+    </a>
+    </div>
+
+
+    <div class="user_search_div">
+        <!-- Update the form to submit to the user_search view URL -->
+        <form action="{% url 'user_search' %}" method="get" class="search_form">
+            <input type="text" name="query" class="search_input" placeholder="Type a username..." value="{{ form.query.value|default_if_none:'' }}">
+            <button type="submit" style="display: none;">Search</button> <!-- Hidden button to allow form submission with Enter -->
+        </form>
+    
+        <div class="searched_users_div">
+            {% if users is not None %}
+                {% if users %}
+                    {% for user in users %}
+                        <div class="searched_users">
+                        <a href="{% url 'profile' user.username %}" style="text-decoration:none; color:black; display:flex; column-gap:10px;">
+                            <img src="{% static 'imgs/profile.png' %}" alt="user_profile" class="searched_profile_pic" style="width:60px; height:60px; border-radius:100%;">
+                            <h4 class="searched_username" style="color: black !important;">{{ user.username }}</h4>
+                        </a>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no_results">No users found</p>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'js/index.js' %}"></script>
+    <script>
+
+document.addEventListener("DOMContentLoaded", function() {
+    const toggleButton = document.querySelector('.light_dark_mode');
+    const nav = document.querySelector('nav'); // Select your nav element
+    const links = document.querySelectorAll('.nav_links a'); // Select all nav links
+    const searchedUsersDiv = document.querySelector('.searched_users_div');
+    
+    // Check localStorage for user's preference
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+        searchedUsersDiv.classList.toggle('dark-mode');
+        nav.classList.add('dark-mode'); // Add dark mode to nav
+        links.forEach(link => link.classList.add('dark-mode')); // Add dark mode to links
+        document.body.classList.remove('light-mode');
+        const sunIcon = document.querySelector('.light_mode');
+        sunIcon.src = "{% static 'imgs/moon.png' %}"; // Change to moon icon
+    }
+
+    toggleButton.addEventListener('click', function() {
+        document.body.classList.toggle('dark-mode');
+        nav.classList.toggle('dark-mode'); // Toggle dark mode for nav
+
+        // Toggle dark mode for links
+        links.forEach(link => {
+            link.classList.toggle('dark-mode'); // Toggle dark mode class on links
+        });
+
+        document.body.classList.toggle('light-mode');
+
+        // Update localStorage based on the current mode
+        if (document.body.classList.contains('dark-mode')) {
+            localStorage.setItem('theme', 'dark');
+            const sunIcon = document.querySelector('.light_mode');
+            sunIcon.src = "{% static 'imgs/moon.png' %}"; // Change to moon icon
+        } else {
+            localStorage.setItem('theme', 'light');
+            const sunIcon = document.querySelector('.light_mode');
+            sunIcon.src = "{% static 'imgs/sun.png' %}"; // Change back to sun icon
+        }
+    });
+});
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.querySelector('.search_input');
+    const resultsDiv = document.querySelector('.searched_users_div');
+
+    searchInput.addEventListener('input', function () {
+        const query = searchInput.value.trim();
+        if (query.length > 0) {
+            fetch(`/search/?query=${encodeURIComponent(query)}`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                resultsDiv.innerHTML = '';
+                if (data.users.length > 0) {
+                    data.users.forEach(user => {
+                        const userDiv = document.createElement('div');
+                        userDiv.className = 'searched_users';
+                        userDiv.innerHTML = `
+                        <a href="/profile/${user.username}/" style="text-decoration:none; color:black; display:flex; column-gap:10px;">
+                            <img src="${user.profile_picture || '/static/imgs/profile.png'}" alt="user_profile" class="searched_profile_pic" style="width:60px; height:60px; border-radius:100%;">
+                            <h4 class="searched_username" style="color: black !important;">${user.username}</h4>
+                        </a>
+                        `;
+                        resultsDiv.appendChild(userDiv);
+                    });
+                } else {
+                    resultsDiv.innerHTML = '<p class="no_results">No users found.</p>';
+                }
+            })
+            .catch(error => console.error('Error fetching search results:', error));
+        } else {
+            resultsDiv.innerHTML = ''; // Clear results if search is empty
+        }
+    });
+});
+
+    </script>
+</body>
+</html>

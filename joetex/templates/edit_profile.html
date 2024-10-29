@@ -1,0 +1,143 @@
+<!-- edit_profile.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit profile - Joetex</title>
+  <link rel="shortcut icon" href="{% static 'imgs/logo.png' %}" type="image/x-icon">
+  <link rel="stylesheet" href="{% static 'css/edit_profile.css' %}"> 
+</head>
+</html>
+<style>
+    @font-face {
+    font-family: 'Joetex';
+    src: url('{% static "fonts/joetex.otf" %}') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+</style>
+
+<body>
+  
+
+  <a href="{% url 'home' %}" style="text-decoration: none; color: black;" class="home_link">
+    <div class="logo_div">
+    <img src="{% static 'imgs/logo.png' %}" alt="">
+    <h1 style="color: red;">Joetex</h1>
+ </div>
+</a>
+
+
+<div class="more_options_div" id="more_options_div">
+  <div class="light_dark_mode">
+      <img src="{% static 'imgs/sun.png' %}" alt="user" class="light_mode" width="25px" height="25px">
+      <p style="color: black  !important;">Switch appearance</p>
+  </div>
+  <div class="problem_div">
+      <img src="{% static 'imgs/problem.png' %}" alt="user" class="problem_img"  width="18px" height="18px">
+      <p style="color: black  !important;">Report a problem</p>
+  </div>
+
+  <a href="{% url 'logout' %}" style="text-decoration: none; color: black;">
+  <div class="logout_div">
+      <img src="{% static 'imgs/logout.png' %}" alt="user" class="logout_img"  width="18px" height="18px">
+      <p>Logout</p>
+  </div>
+</a>
+</div>
+
+<div class="edit_profile_div">
+  <h1>Edit Profile</h1>
+  <!-- edit_profile.html -->
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <!-- User form fields -->
+    {{ user_form.as_p }}
+
+    <!-- Profile form fields -->
+    {{ profile_form.bio.label_tag }} {{ profile_form.bio }}
+    {{ profile_form.location.label_tag }} {{ profile_form.location }}
+    {{ profile_form.birth_date.label_tag }} {{ profile_form.birth_date }}
+
+    <!-- Custom profile picture upload field -->
+    <div class="file-upload">
+          <div class="current-picture" id="current-picture-container">
+            <img src="{% if profile_form.profile_picture.value %}{{ profile_form.profile_picture.value.url }}{% else %}{% static 'imgs/profile.png' %}{% endif %}" 
+            alt="Current Profile Picture" 
+            class="current-picture-img" 
+            style="width: 80px; height: 80px; border-radius: 100%;" 
+            id="current-picture" />
+          </div>
+  
+      <label for="profile_picture" class="custom-file-label" id="profile-picture-label">Update Profile Picture</label>
+  
+      <!-- File input field -->
+      <input type="file" name="{{ profile_form.profile_picture.name }}" id="profile_picture" class="profile-picture-input" accept="image/*" onchange="previewImage(event)" />
+  </div>
+    
+    <button type="submit">Save changes</button>
+  </form>
+</div>
+</body>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+        const toggleButton = document.querySelector(".light_dark_mode");
+        const nav = document.querySelector("nav"); // Select your nav element
+        const links = document.querySelectorAll(".nav_links a"); // Select all nav links
+
+        // Check localStorage for user's preference
+        if (localStorage.getItem("theme") === "dark") {
+          document.body.classList.add("dark-mode");
+          nav.classList.add("dark-mode"); // Add dark mode to nav
+          links.forEach((link) => link.classList.add("dark-mode")); // Add dark mode to links
+          document.body.classList.remove("light-mode");
+          const sunIcon = document.querySelector(".light_mode");
+          sunIcon.src = "{% static 'imgs/moon.png' %}"; // Change to moon icon
+        }
+
+        toggleButton.addEventListener("click", function () {
+          document.body.classList.toggle("dark-mode");
+          nav.classList.toggle("dark-mode"); // Toggle dark mode for nav
+
+          // Toggle dark mode for links
+          links.forEach((link) => {
+            link.classList.toggle("dark-mode"); // Toggle dark mode class on links
+          });
+
+          document.body.classList.toggle("light-mode");
+
+          // Update localStorage based on the current mode
+          if (document.body.classList.contains("dark-mode")) {
+            localStorage.setItem("theme", "dark");
+            const sunIcon = document.querySelector(".light_mode");
+            sunIcon.src = "{% static 'imgs/moon.png' %}"; // Change to moon icon
+          } else {
+            localStorage.setItem("theme", "light");
+            const sunIcon = document.querySelector(".light_mode");
+            sunIcon.src = "{% static 'imgs/sun.png' %}"; // Change back to sun icon
+          }
+        });
+      });
+
+
+      function previewImage(event) {
+      const file = event.target.files[0];
+      const currentPicture = document.getElementById('current-picture');
+
+      if (file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+              // Replace the current picture with the new image
+              if (currentPicture) {
+                  currentPicture.src = e.target.result; // Update the src of the current picture
+              }
+          };
+          reader.readAsDataURL(file); // Read the file as a data URL
+      }
+  }
+</script>

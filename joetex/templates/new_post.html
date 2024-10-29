@@ -1,0 +1,161 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New Post - Joetex</title>
+    <link rel="stylesheet" href="{% static 'css/new_post.css' %}"> 
+    <link rel="shortcut icon" href="{% static 'imgs/logo.png' %}" type="image/x-icon">
+
+    <style>
+        @font-face {
+    font-family: 'Joetex';
+    src: url('{% static "fonts/joetex.otf" %}') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.error {
+  color: red !important;
+  margin-top: 5px;
+  font-size: 15px;
+}
+    </style>
+  </head>
+  <body>
+
+    <a href="{% url 'home' %}" style="text-decoration: none; color: black;" class="home_link">
+        <div class="logo_div">
+        <img src="{% static 'imgs/logo.png' %}" alt="">
+        <h1 style="color: red;">Joetex</h1>
+     </div>
+    </a>
+
+    <div class="more_options_div" id="more_options_div">
+        <div class="light_dark_mode">
+            <img src="{% static 'imgs/sun.png' %}" alt="user" class="light_mode" width="25px" height="25px">
+            <p style="color: black  !important;">Switch appearance</p>
+        </div>
+        <div class="problem_div">
+            <img src="{% static 'imgs/problem.png' %}" alt="user" class="problem_img"  width="18px" height="18px">
+            <p style="color: black  !important;">Report a problem</p>
+        </div>
+
+        <a href="{% url 'logout' %}" style="text-decoration: none; color: black;">
+        <div class="logout_div">
+            <img src="{% static 'imgs/logout.png' %}" alt="user" class="logout_img"  width="18px" height="18px">
+            <p>Logout</p>
+        </div>
+    </a>
+    </div>
+
+    <div class="post_div">
+    <h1>New Post</h1>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+    
+        {% if form.image.errors %}
+        <div class="error">{{ form.image.errors }}</div>
+      {% endif %}
+
+        <div class="form-group">
+            {{ form.title.label_tag }}
+            {{ form.title }}
+        </div>
+    
+        <!-- Custom button for the image field -->
+         <div class="file_upload_div">
+
+        <div class="file-upload">
+            <label for="image" class="custom-file-label" id="image-label">Choose Image</label>
+            {{ form.image }}
+        </div>
+        <p>Or</p>
+        <!-- Custom button for the video field -->
+        <div class="file-upload">
+            <label for="video" class="custom-file-label" id="video-label">Choose Video</label>
+            {{ form.video }}
+        </div>
+    
+        </div>
+        <button type="submit">Post</button>
+    </form>
+
+    <div id="image-preview" class="preview"></div>
+
+    <div id="video-preview" class="preview"></div>
+    <div class="go_back">
+    <a href="{% url 'home' %}">Back to posts</a>
+    </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+        const toggleButton = document.querySelector(".light_dark_mode");
+        const nav = document.querySelector("nav"); // Select your nav element
+        const links = document.querySelectorAll(".nav_links a"); // Select all nav links
+
+        // Check localStorage for user's preference
+        if (localStorage.getItem("theme") === "dark") {
+          document.body.classList.add("dark-mode");
+          nav.classList.add("dark-mode"); // Add dark mode to nav
+          links.forEach((link) => link.classList.add("dark-mode")); // Add dark mode to links
+          document.body.classList.remove("light-mode");
+          const sunIcon = document.querySelector(".light_mode");
+          sunIcon.src = "{% static 'imgs/moon.png' %}"; // Change to moon icon
+        }
+
+        toggleButton.addEventListener("click", function () {
+          document.body.classList.toggle("dark-mode");
+          nav.classList.toggle("dark-mode"); // Toggle dark mode for nav
+
+          // Toggle dark mode for links
+          links.forEach((link) => {
+            link.classList.toggle("dark-mode"); // Toggle dark mode class on links
+          });
+
+          document.body.classList.toggle("light-mode");
+
+          // Update localStorage based on the current mode
+          if (document.body.classList.contains("dark-mode")) {
+            localStorage.setItem("theme", "dark");
+            const sunIcon = document.querySelector(".light_mode");
+            sunIcon.src = "{% static 'imgs/moon.png' %}"; // Change to moon icon
+          } else {
+            localStorage.setItem("theme", "light");
+            const sunIcon = document.querySelector(".light_mode");
+            sunIcon.src = "{% static 'imgs/sun.png' %}"; // Change back to sun icon
+          }
+        });
+      });
+
+      document.querySelector('input[type="file"][name="image"]').addEventListener('change', function(e) {
+            const preview = document.getElementById('image-preview');
+            const file = e.target.files[0];
+            preview.innerHTML = '';  // Clear any existing preview
+    
+            if (file && file.type.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                preview.appendChild(img);
+            }
+        });
+    
+        // Preview for video input
+        document.querySelector('input[type="file"][name="video"]').addEventListener('change', function(e) {
+            const preview = document.getElementById('video-preview');
+            const file = e.target.files[0];
+            preview.innerHTML = '';  // Clear any existing preview
+    
+            if (file && file.type.startsWith('video/')) {
+                const video = document.createElement('video');
+                video.src = URL.createObjectURL(file);
+                video.controls = true;
+                preview.appendChild(video);
+            }
+        });
+    </script>
+  </body>
+</html>

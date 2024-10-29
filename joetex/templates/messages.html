@@ -1,0 +1,466 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Messages - Joetex</title>
+        <link rel="stylesheet" href="{% static 'css/messages.css' %}"> 
+        <!-- <link rel="stylesheet" href="{% static 'css/index.css' %}">  -->
+        <link rel="shortcut icon" href="{% static 'imgs/logo.png' %}" type="image/x-icon">
+        <style>
+            @font-face {
+        font-family: 'Joetex';
+        src: url('{% static "fonts/joetex.otf" %}') format('opentype');
+        font-weight: normal;
+        font-style: normal;
+    }
+        </style>
+    </head>
+<body>
+    
+
+    
+    <nav>
+        <a href="{% url 'home' %}" style="text-decoration: none; color: black;" class="home_link">
+            <div class="logo_div">
+            <img src="{% static 'imgs/logo.png' %}" alt="">
+         </div>
+        </a>
+        <div class="nav_links"><a href="{% url 'home' %}"><img src="{% static 'imgs/home.png' %}" alt="home" class="nav_img"></a></div>
+        <div class="nav_links"><a href="{% url 'user_search' %}"><img src="{% static 'imgs/search.png' %}" alt="search" class="nav_img"></a></div>
+        <div class="nav_links"><a href="{% url 'chat_view' user.username%}"><img src="{% static 'imgs/messages.png' %}" alt="messages" class="nav_img"></a></div>
+        <div class="nav_links"><a href="{% url 'post_new' %}"><img src="{% static 'imgs/post.png' %}" alt="post" class="nav_img"></a></div>
+        <div class="nav_links">
+            <a href="{% url 'profile' username=user.username %}">
+                {% if user_profile_picture %}
+                <img src="{{ user_profile_picture }}" alt="user_profile" class="nav_img" style="border-radius: 100%;">
+            {% else %}
+                <img src="{% static 'imgs/profile.png' %}" alt="user_profile" class="nav_img" style="border-radius: 100%;">
+            {% endif %}
+            </a>
+        </div>
+        <div class="nav_links" id="more_options"><a href="#"><img src="{% static 'imgs/menu.png' %}" alt="more" class="nav_img"></a></div>
+    </nav>
+
+    <div class="more_options_div" id="more_options_div">
+        <div class="light_dark_mode">
+            <img src="{% static 'imgs/sun.png' %}" alt="user" class="light_mode" width="25px" height="25px">
+            <p style="color: black !important;">Switch appearance</p>
+        </div>
+        <div class="problem_div">
+            <img src="{% static 'imgs/problem.png' %}" alt="user" class="problem_img"  width="18px" height="18px">
+            <p style="color: black !important;">Report a problem</p>
+        </div>
+
+        <a href="{% url 'logout' %}" style="text-decoration: none; color: black;">
+        <div class="logout_div">
+            <img src="{% static 'imgs/logout.png' %}" alt="user" class="logout_img"  width="18px" height="18px">
+            <p style="color: black !important;">Logout</p>
+        </div>
+    </a>
+    </div>
+
+
+    <div class="messages">
+        <div class="user_list_div">
+            <div class="header">
+                <h2>Your messages</h2>
+                <img src="{% static 'imgs/message.png' %}" alt="" class="message_icon" style="display: none;">
+            </div>
+            <div class="user_list">
+                {% for user in users %}
+                <div class="message_users" onclick="location.href='{% url 'chat_view' user.username %}'">
+                    <img src="{% static 'imgs/profile.png' %}" alt="" class="user_profile">
+                    <h4 class="username">{{ user.username }}</h4>
+                    {% if user.unread_messages > 0 %}
+                        <span class="new_messages_count">{{ user.unread_messages }}</span>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="no_users_div">
+                 <h3 class="no_users_h3">You have no users to send messages too yet</h3>
+                 <p class="no_users_p">Search for users and start chatting!</p>
+                <img src="{% static 'imgs/no_user.png' %}" alt="" class="no_users_img" style="display: none;">
+                <button class="search_btn">Search</button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    
+        <div class="messgae_section_div">
+            {% if selected_user %}
+            <div class="user_header">
+                <div class="message_username_section">
+                    <img src="{% static 'imgs/profile.png' %}" alt="" class="message_username_profile">
+                    <h4 class="message_username">
+                        <a href="{% url 'profile' selected_user.username %}" style="text-decoration: none; color: black;">{{ selected_user.username }}</a>
+                    </h4>
+                </div>
+            </div>            
+    
+            <div class="main_messages">
+                {% for message in messages %}
+                    <div class="{% if message.sender.username == request.user.username %}sender_section{% else %}receiver_section{% endif %}">
+                        <p class="message_content" style="color: #ffffff;">{{ message.content }}</p>
+                        {% if message.sender == request.user %}
+                            <button onclick="deleteMessage({{ message.id }})" class="delete-button">🗑️</button>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+                <button onclick="scrollToBottom()" id="scrollToBottomBtn" class="scroll-to-bottom-btn">⬇</button>
+            {% else %}
+                <p class="select_to_chat">Select a user to start chatting!</p>
+            {% endif %}
+    
+            <form action="" class="messages_form" onsubmit="sendMessage(event)" id="messagesForm" style="display: {% if selected_user %}block{% else %}none{% endif %};">
+                {% csrf_token %}
+                <input type="text" placeholder="Type a message..." class="messages_input" id="messageInput" required>
+            </form>
+        </div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'js/index.js' %}"></script>
+
+
+    <script>
+
+
+document.addEventListener("DOMContentLoaded", function() {
+    const toggleButton = document.querySelector('.light_dark_mode');
+    const nav = document.querySelector('nav');
+    const links = document.querySelectorAll('.nav_links a');
+    const headers = document.querySelectorAll('.header');
+    const messgae_section_divs = document.querySelectorAll(".messgae_section_div");
+    const user_headers = document.querySelectorAll(".user_header");
+    const messages_inputs = document.querySelectorAll(".messages_input");
+    
+    // Check localStorage for user's preference
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+        nav.classList.add('dark-mode');
+        links.forEach(link => link.classList.add('dark-mode'));
+
+        // Add dark mode to headers and other elements
+        headers.forEach(header => {
+            header.classList.add('dark-mode'); // Use add() instead of toggle() for initialization
+        });
+
+        messgae_section_divs.forEach(messgae_section_div => {
+            messgae_section_div.classList.add("dark-mode");
+        });
+
+        user_headers.forEach(user_header => {
+            user_header.classList.add("dark-mode");
+        });
+
+        messages_inputs.forEach(messages_input => {
+            messages_input.classList.add("dark-mode");
+        });
+
+        const sunIcon = document.querySelector('.light_mode');
+        sunIcon.src = "{% static 'imgs/moon.png' %}"; // Change to moon icon
+    }
+
+    toggleButton.addEventListener('click', function() {
+        document.body.classList.toggle('dark-mode');
+        nav.classList.toggle('dark-mode');
+        
+        // Toggle dark mode for links
+        links.forEach(link => {
+            link.classList.toggle('dark-mode');
+        });
+
+        // Toggle dark mode for headers and other elements
+        headers.forEach(header => {
+            header.classList.toggle('dark-mode'); // Toggle for header elements
+        });
+
+        messgae_section_divs.forEach(messgae_section_div => {
+            messgae_section_div.classList.toggle("dark-mode"); // Toggle for message section
+        });
+
+        user_headers.forEach(user_header => {
+            user_header.classList.toggle("dark-mode"); // Toggle for user headers
+        });
+
+        messages_inputs.forEach(messages_input => {
+            messages_input.classList.toggle("dark-mode"); // Toggle for message inputs
+        });
+
+        // Update localStorage based on the current mode
+        if (document.body.classList.contains('dark-mode')) {
+            localStorage.setItem('theme', 'dark');
+            const sunIcon = document.querySelector('.light_mode');
+            sunIcon.src = "{% static 'imgs/moon.png' %}"; // Change to moon icon
+        } else {
+            localStorage.setItem('theme', 'light');
+            const sunIcon = document.querySelector('.light_mode');
+            sunIcon.src = "{% static 'imgs/sun.png' %}"; // Change back to sun icon
+        }
+    });
+});
+
+
+function scrollToBottomOnLoad() {
+    const mainMessages = document.querySelector('.main_messages');
+    if (mainMessages) {
+        mainMessages.scrollTop = mainMessages.scrollHeight;
+    }
+}
+
+// Execute the function when the DOM content is fully loaded
+document.addEventListener('DOMContentLoaded', scrollToBottomOnLoad);
+
+        // Function to send a message
+        function sendMessage(event) {
+    event.preventDefault(); // Prevent form submission
+
+    const messageInput = document.getElementById('messageInput');
+    const messageContent = messageInput.value.trim();
+    const recipientUsername = "{{ selected_user.username }}"; // Adjust if necessary
+
+    if (messageContent) {
+        // Display the sent message immediately
+        const mainMessages = document.querySelector('.main_messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'sender_section';
+        messageDiv.id = `message-${Date.now()}`; // Use a temporary ID for the message
+
+        // Add the message content and delete button
+        messageDiv.innerHTML = `
+            <p class="sender_message_content">${messageContent}</p>
+            <button class="delete-button" onclick="deleteMessage(${Date.now()})">🗑️</button>
+        `;
+
+        mainMessages.appendChild(messageDiv);
+
+        // Scroll to bottom after appending the new message
+        scrollToBottom();
+
+        // Send the message to the server
+        fetch('/send_message/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}', // Ensure CSRF token is included
+            },
+            body: JSON.stringify({
+                recipient: recipientUsername,
+                message: messageContent
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            messageInput.value = ''; // Clear input after sending
+            fetchMessages(); // Fetch messages again to update the view without clearing current messages
+            resetPopupAcknowledgement(); // Reset popup acknowledgement if conditions are met
+        })
+        .catch(error => console.error('Error sending message:', error));
+    }
+}
+
+
+
+
+// Function to scroll to the bottom of the main_messages container
+function scrollToBottom() {
+    const mainMessages = document.querySelector('.main_messages');
+    if (mainMessages) {
+        mainMessages.scrollTop = mainMessages.scrollHeight;
+    }
+    document.getElementById('scrollToBottomBtn').style.display = 'none'; // Hide button after scroll
+}
+
+// Show the button when the user scrolls up
+document.querySelector('.main_messages').addEventListener('scroll', function () {
+    const mainMessages = document.querySelector('.main_messages');
+    const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
+    
+    // Show button if user scrolls up, hide if they're at the bottom
+    if (mainMessages.scrollHeight - mainMessages.scrollTop > mainMessages.clientHeight + 50) {
+        scrollToBottomBtn.style.display = 'block';
+    } else {
+        scrollToBottomBtn.style.display = 'none';
+    }
+});
+
+
+const popupHeightThreshold = 300; // Adjust as necessary
+let lastMessageId = null; 
+
+// Function to show the popup
+function showNewMessagePopup() {
+    const popup = document.getElementById('newMessagePopup'); // Make sure you have an element for the popup
+    popup.style.display = 'block'; // Show the popup
+}
+
+// Function to hide the popup and update local storage
+function hideNewMessagePopup() {
+    const popup = document.getElementById('newMessagePopup');
+    popup.style.display = 'none'; // Hide the popup
+    localStorage.setItem('popupAcknowledged', 'true'); // Set acknowledged flag
+}
+
+// Check if the popup should be shown
+function checkPopupCondition(newMessageReceived) {
+    if (newMessageReceived && window.scrollY < popupHeightThreshold && !localStorage.getItem('popupAcknowledged')) {
+        showNewMessagePopup();
+    }
+}
+
+// Function to handle scrolling
+window.addEventListener('scroll', () => {
+    if (window.scrollY > popupHeightThreshold) {
+        localStorage.setItem('popupAcknowledged', 'true'); // Acknowledge on scroll down
+        hideNewMessagePopup(); // Hide the popup
+    }
+});
+
+// Function to handle popup click
+document.addEventListener('DOMContentLoaded', () => {
+    const newMessagePopup = document.getElementById('newMessagePopup');
+    
+    if (newMessagePopup) {
+        newMessagePopup.addEventListener('click', () => {
+            hideNewMessagePopup(); // Hide the popup on click
+        });
+    }
+});
+
+
+
+// Function to fetch messages
+function fetchMessages() {
+    const recipient = "{{ selected_user.username }}";  // Adjust if necessary
+
+    fetch(`/fetch_messages/${recipient}/`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("Fetched data:", data); // Log entire response to inspect structure
+
+            const mainMessages = document.querySelector('.main_messages');
+            let newMessageReceived = false; // Flag to check for new messages
+
+            // Check if 'messages' exists in the fetched data
+            if (data.messages && Array.isArray(data.messages)) {
+                data.messages.forEach(message => {
+                    // Check if the message already exists in the DOM
+                    if (!document.getElementById(`message-${message.id}`)) {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.id = `message-${message.id}`;  // Set a unique ID for each message
+
+                        if (message.sender === "{{ request.user.username }}") {
+                            messageDiv.className = 'sender_section';
+                            messageDiv.innerHTML = `
+                                <p class="sender_message_content">${message.content}</p>
+                                <button class="delete-button" onclick="deleteMessage(${message.id})">🗑️</button>
+                            `;
+                        } else {
+                            messageDiv.className = 'receiver_section';
+                            messageDiv.innerHTML = `<p class="receiver_message_content">${message.content}</p>`;
+                        }
+
+                        mainMessages.appendChild(messageDiv); // Append only new messages
+
+                        // Check for new message
+                        if (lastMessageId === null || message.id > lastMessageId) {
+                            lastMessageId = message.id; // Update lastMessageId
+                            newMessageReceived = true; // Set flag for new message
+                        }
+                    }
+                });
+            } else {
+                console.warn("data.messages is undefined or not an array:", data);
+            }
+
+            // Check popup condition based on new messages
+            checkPopupCondition(newMessageReceived);
+        })
+        .catch(error => {
+            console.error("Error fetching messages:", error);
+        });
+}
+
+
+
+// Call this function to reset the local storage if a new message is sent
+function resetPopupAcknowledgement() {
+    if (window.scrollY < popupHeightThreshold) {
+        localStorage.removeItem('popupAcknowledged'); // Remove the acknowledged flag if a new message is sent and conditions are met
+    }
+}
+
+
+
+
+
+
+setInterval(fetchMessages, 10000);
+
+// Function to get CSRF token (if using Django)
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
+function deleteMessage(messageId) {
+    // Immediately remove the message from the sender's view
+    const messageDiv = document.querySelector(`#message-${messageId}`);
+    if (messageDiv) {
+        messageDiv.remove(); // Remove the message div from the DOM
+    }
+
+    // Send a request to the server to delete the message
+    fetch(`/delete_message/${messageId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            console.log("Message deleted successfully on the server.");
+            // Optionally, re-fetch messages to keep sender and receiver in sync
+            fetchMessages(); // Fetch updated messages after deletion
+        } else {
+            alert("Failed to delete message.");
+            // Optionally, you could add the message back to the DOM if the deletion fails
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+fetchMessages();
+
+    </script>
+</body>
+</html>
