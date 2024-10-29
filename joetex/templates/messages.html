@@ -83,7 +83,9 @@
                  <h3 class="no_users_h3">You have no users to send messages too yet</h3>
                  <p class="no_users_p">Search for users and start chatting!</p>
                 <img src="{% static 'imgs/no_user.png' %}" alt="" class="no_users_img" style="display: none;">
+                <a href="{% url 'user_search' %}" style="text-decoration: none; color: #ffffff;">
                 <button class="search_btn">Search</button>
+                </a>
                 </div>
                 {% endfor %}
             </div>
@@ -217,12 +219,12 @@ function scrollToBottomOnLoad() {
 document.addEventListener('DOMContentLoaded', scrollToBottomOnLoad);
 
         // Function to send a message
-        function sendMessage(event) {
+    function sendMessage(event) {
     event.preventDefault(); // Prevent form submission
 
     const messageInput = document.getElementById('messageInput');
     const messageContent = messageInput.value.trim();
-    const recipientUsername = "{{ selected_user.username }}"; // Adjust if necessary
+    const recipientUsername = "{{ selected_user.username }}";
 
     if (messageContent) {
         // Display the sent message immediately
@@ -233,7 +235,7 @@ document.addEventListener('DOMContentLoaded', scrollToBottomOnLoad);
 
         // Add the message content and delete button
         messageDiv.innerHTML = `
-            <p class="sender_message_content">${messageContent}</p>
+            <p class="sender_message_content" style="color: #ffffff;">${messageContent}</p>
             <button class="delete-button" onclick="deleteMessage(${Date.now()})">🗑️</button>
         `;
 
@@ -262,8 +264,6 @@ document.addEventListener('DOMContentLoaded', scrollToBottomOnLoad);
         })
         .then(data => {
             messageInput.value = ''; // Clear input after sending
-            fetchMessages(); // Fetch messages again to update the view without clearing current messages
-            resetPopupAcknowledgement(); // Reset popup acknowledgement if conditions are met
         })
         .catch(error => console.error('Error sending message:', error));
     }
@@ -295,119 +295,57 @@ document.querySelector('.main_messages').addEventListener('scroll', function () 
 });
 
 
-const popupHeightThreshold = 300; // Adjust as necessary
-let lastMessageId = null; 
-
-// Function to show the popup
-function showNewMessagePopup() {
-    const popup = document.getElementById('newMessagePopup'); // Make sure you have an element for the popup
-    popup.style.display = 'block'; // Show the popup
-}
-
-// Function to hide the popup and update local storage
-function hideNewMessagePopup() {
-    const popup = document.getElementById('newMessagePopup');
-    popup.style.display = 'none'; // Hide the popup
-    localStorage.setItem('popupAcknowledged', 'true'); // Set acknowledged flag
-}
-
-// Check if the popup should be shown
-function checkPopupCondition(newMessageReceived) {
-    if (newMessageReceived && window.scrollY < popupHeightThreshold && !localStorage.getItem('popupAcknowledged')) {
-        showNewMessagePopup();
-    }
-}
-
-// Function to handle scrolling
-window.addEventListener('scroll', () => {
-    if (window.scrollY > popupHeightThreshold) {
-        localStorage.setItem('popupAcknowledged', 'true'); // Acknowledge on scroll down
-        hideNewMessagePopup(); // Hide the popup
-    }
-});
-
-// Function to handle popup click
-document.addEventListener('DOMContentLoaded', () => {
-    const newMessagePopup = document.getElementById('newMessagePopup');
-    
-    if (newMessagePopup) {
-        newMessagePopup.addEventListener('click', () => {
-            hideNewMessagePopup(); // Hide the popup on click
-        });
-    }
-});
-
-
 
 // Function to fetch messages
 function fetchMessages() {
-    const recipient = "{{ selected_user.username }}";  // Adjust if necessary
+    const recipient = "{{ selected_user.username }}"; 
+
+    console.log(`Fetching messages for: ${recipient}`); // Log recipient
 
     fetch(`/fetch_messages/${recipient}/`)
         .then(response => {
             if (!response.ok) {
+                console.error(`Failed to fetch messages: ${response.statusText}`);
                 throw new Error('Network response was not ok');
             }
             return response.json();
         })
         .then(data => {
-            console.log("Fetched data:", data); // Log entire response to inspect structure
+            console.log("Fetched data:", data); 
 
             const mainMessages = document.querySelector('.main_messages');
-            let newMessageReceived = false; // Flag to check for new messages
+            let newMessageReceived = false; 
 
-            // Check if 'messages' exists in the fetched data
-            if (data.messages && Array.isArray(data.messages)) {
-                data.messages.forEach(message => {
-                    // Check if the message already exists in the DOM
-                    if (!document.getElementById(`message-${message.id}`)) {
-                        const messageDiv = document.createElement('div');
-                        messageDiv.id = `message-${message.id}`;  // Set a unique ID for each message
+            data.forEach(message => {
+                if (!document.getElementById(`message-${message.id}`)) {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.id = `message-${message.id}`;
 
-                        if (message.sender === "{{ request.user.username }}") {
-                            messageDiv.className = 'sender_section';
-                            messageDiv.innerHTML = `
-                                <p class="sender_message_content">${message.content}</p>
-                                <button class="delete-button" onclick="deleteMessage(${message.id})">🗑️</button>
-                            `;
-                        } else {
-                            messageDiv.className = 'receiver_section';
-                            messageDiv.innerHTML = `<p class="receiver_message_content">${message.content}</p>`;
-                        }
-
-                        mainMessages.appendChild(messageDiv); // Append only new messages
-
-                        // Check for new message
-                        if (lastMessageId === null || message.id > lastMessageId) {
-                            lastMessageId = message.id; // Update lastMessageId
-                            newMessageReceived = true; // Set flag for new message
-                        }
+                    if (message.sender === "{{ request.user.username }}") {
+                        messageDiv.className = 'sender_section';
+                        messageDiv.innerHTML = `
+                            <p class="sender_message_content" style="color: #ffffff;">${message.content}</p>
+                            <button class="delete-button" onclick="deleteMessage(${message.id})">🗑️</button>
+                        `;
+                    } else {
+                        messageDiv.className = 'receiver_section';
+                        messageDiv.innerHTML = `<p class="receiver_message_content" style="color: #ffffff;">${message.content}</p>`;
                     }
-                });
-            } else {
-                console.warn("data.messages is undefined or not an array:", data);
+
+                    mainMessages.appendChild(messageDiv);
+                    newMessageReceived = true;
+                }
+            });
+            
+            if (newMessageReceived) {
+                scrollToBottom(); // Scroll to bottom if new messages were added
             }
 
-            // Check popup condition based on new messages
-            checkPopupCondition(newMessageReceived);
         })
         .catch(error => {
             console.error("Error fetching messages:", error);
         });
 }
-
-
-
-// Call this function to reset the local storage if a new message is sent
-function resetPopupAcknowledgement() {
-    if (window.scrollY < popupHeightThreshold) {
-        localStorage.removeItem('popupAcknowledged'); // Remove the acknowledged flag if a new message is sent and conditions are met
-    }
-}
-
-
-
-
 
 
 setInterval(fetchMessages, 10000);

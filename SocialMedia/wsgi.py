@@ -12,7 +12,7 @@ import sys
 
 from django.core.wsgi import get_wsgi_application
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'SocialMedia'))
+sys.path.append(os.path.join(os.path.dirname(__file__), "SocialMedia"))
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "SocialMedia.settings")
 

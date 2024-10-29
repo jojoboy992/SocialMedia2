@@ -21,7 +21,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path("x1_x1_x1_joetex-joetex-joetex-jojoboy-app-fly_io_x1_x1_x1_kill-you-hate-you-hashtag-dont-hack-pleas-im-begging-you-please=alright-x1-x1-x1-x3/", admin.site.urls),
+    path(
+        "x1_x1_x1_joetex-joetex-joetex-jojoboy-app-fly_io_x1_x1_x1_kill-you-hate-you-hashtag-dont-hack-pleas-im-begging-you-please=alright-x1-x1-x1-x3/",
+        admin.site.urls,
+    ),
     path("", include("joetex.urls")),
 ]
 
