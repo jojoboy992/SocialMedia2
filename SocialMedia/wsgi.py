@@ -17,3 +17,19 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "SocialMedia"))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "SocialMedia.settings")
 
 application = get_wsgi_application()
+
+
+# import os
+# import sys
+# #
+# ## assuming your django settings file is at '/home/joetex/mysite/mysite/settings.py'
+# ## and your manage.py is is at '/home/joetex/mysite/manage.py'
+# path = '/home/joetex/SocialMedia/'
+# if path not in sys.path:
+#     sys.path.append(path)
+
+# os.environ['DJANGO_SETTINGS_MODULE'] = 'SocialMedia.settings'
+# #
+# ## then:
+# from django.core.wsgi import get_wsgi_application
+# application = get_wsgi_application()
