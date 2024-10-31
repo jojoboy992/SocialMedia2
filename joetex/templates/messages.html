@@ -83,13 +83,8 @@
                  <h3 class="no_users_h3">You have no users to send messages too yet</h3>
                  <p class="no_users_p">Search for users and start chatting!</p>
                 <img src="{% static 'imgs/no_user.png' %}" alt="" class="no_users_img" style="display: none;">
-<<<<<<< HEAD
-                <a href="{% url 'user_search' %}" style="text-decoration: none; color: #ffffff;">
-                <button class="search_btn">Search</button>
-=======
                  <a href="{% url 'user_search' %}" style="text-decoration: none; color: #ffffff;">
                     <button class="search_btn">Search</button>
->>>>>>> 1bbb36e48030de5b569cff1ec37408b96e3d20f2
                 </a>
                 </div>
                 {% endfor %}
@@ -223,7 +218,7 @@ function scrollToBottomOnLoad() {
 // Execute the function when the DOM content is fully loaded
 document.addEventListener('DOMContentLoaded', scrollToBottomOnLoad);
 
-    // Function to send a message
+// Function to send a message
 function sendMessage(event) {
     event.preventDefault();
 
@@ -277,7 +272,6 @@ function sendMessage(event) {
 
 
 
-
 // Function to scroll to the bottom of the main_messages container
 function scrollToBottom() {
     const mainMessages = document.querySelector('.main_messages');
@@ -302,6 +296,7 @@ document.querySelector('.main_messages').addEventListener('scroll', function () 
 
 
 
+// Function to fetch messages
 // Function to fetch messages
 function fetchMessages() {
     const recipient = "{{ selected_user.username }}";
@@ -343,6 +338,7 @@ function fetchMessages() {
             console.error("Error fetching messages:", error);
         });
 }
+
 
 
 setInterval(fetchMessages, 10000);

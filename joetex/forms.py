@@ -73,7 +73,7 @@ class PostForm(forms.ModelForm):
             img = Image.open(image)
             width, height = img.size
             if (width, height) < (1080, 1080):
-                raise ValidationError(f"Image resolution must be at least 1080 x 1350 pixels. Current resolution: {width} x {height}.")
+                raise ValidationError(f"Image resolution must be at least 1080 x 1080 pixels. Current resolution: {width} x {height}.")
         return image
 
     def clean_video(self):
