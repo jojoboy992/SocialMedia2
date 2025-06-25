@@ -28,13 +28,21 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "nice-try-lil-bro")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = [".onrender.com"]
+# ALLOWED_HOSTS = [".onrender.com"]
+ALLOWED_HOSTS = ["*"]
+
 
 LOGIN_URL = "/login/"
 
-CORS_ALLOWED_ORIGINS = ["https://joetex.onrender.com"]
+# CORS_ALLOWED_ORIGINS = ["https://joetex.onrender.com"]
 
-CSRF_TRUSTED_ORIGINS = ["https://joetex.onrender.com"]
+CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:8000"]
+
+
+# CSRF_TRUSTED_ORIGINS = ["https://joetex.onrender.com"]
+
+CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000"]
+
 
 WHITENOISE_ALLOW_ALL_ORIGINS = True
 
