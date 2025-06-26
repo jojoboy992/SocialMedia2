@@ -15,6 +15,7 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
+
 # Custom Login Form
 class CustomLoginForm(AuthenticationForm):
     def confirm_login_allowed(self, user):
@@ -60,7 +61,6 @@ class CustomSignupForm(UserCreationForm):
         return password
 
 
-
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
@@ -68,20 +68,24 @@ class PostForm(forms.ModelForm):
         labels = {"title": "Caption"}
 
     def clean_image(self):
-        image = self.cleaned_data.get('image')
+        image = self.cleaned_data.get("image")
         if image:
             img = Image.open(image)
             width, height = img.size
-            if (width, height) < (720, 720):
-                raise ValidationError(f"Image resolution must be at least 720 x 720 pixels. Current resolution: {width} x {height}.")
+            if (width, height) < (1080, 1080):
+                raise ValidationError(
+                    f"Image resolution must be at least 1080 x 1080 pixels. Current resolution: {width} x {height}."
+                )
         return image
 
     def clean_video(self):
-        video = self.cleaned_data.get('video')
+        video = self.cleaned_data.get("video")
         if video:
             try:
                 # Temporarily save video for OpenCV processing
-                with tempfile.NamedTemporaryFile(suffix=".mp4", delete=True) as temp_video:
+                with tempfile.NamedTemporaryFile(
+                    suffix=".mp4", delete=True
+                ) as temp_video:
                     for chunk in video.chunks():
                         temp_video.write(chunk)
                     temp_video.seek(0)
@@ -92,8 +96,10 @@ class PostForm(forms.ModelForm):
                     # Use OpenCV to check resolution
                     cap = cv2.VideoCapture(temp_video.name)
                     if not cap.isOpened():
-                        raise ValidationError("Unable to open video file. Please ensure it's a valid video format.")
-                    
+                        raise ValidationError(
+                            "Unable to open video file. Please ensure it's a valid video format."
+                        )
+
                     # Get the width and height of the video
                     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
                     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -103,13 +109,17 @@ class PostForm(forms.ModelForm):
                     logging.debug(f"Video width: {width}, height: {height}")
 
                     # Check if resolution meets requirements
-                    if (width, height) < (720, 720):
-                        raise ValidationError(f"Video resolution must be at least 720 x 720 pixels. Current resolution: {width} x {height}.")
+                    if (width, height) < (1080, 1080):
+                        raise ValidationError(
+                            f"Video resolution must be at least 1080 x 1080 pixels. Current resolution: {width} x {height}."
+                        )
             except ValidationError as ve:
                 raise ve  # Re-raise any validation errors to be handled by the form
             except Exception as e:
                 logging.error(f"Error processing video: {e}")
-                raise ValidationError("Unable to process video file. Please ensure it's a valid video format.")
+                raise ValidationError(
+                    "Unable to process video file. Please ensure it's a valid video format."
+                )
         return video
 
 
@@ -119,13 +129,12 @@ class CustomClearableFileInput(ClearableFileInput):
     def use_required_attribute(self, initial):
         return False
 
+
 class UserForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ["first_name", "last_name", "email"]
-        widgets = {
-            "title": forms.TextInput(attrs={"class": "title-input"})
-        }
+        widgets = {"title": forms.TextInput(attrs={"class": "title-input"})}
 
 
 class ProfileForm(forms.ModelForm):

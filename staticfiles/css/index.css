@@ -1146,17 +1146,14 @@ nav.dark-mode {
   .post_div {
     margin: 0 !important;
     width: 100% !important;
-    min-height: 300px !important;
     height: auto;
     margin-left: 0px !important;
     position: relative;
-    min-height: 100px;
     margin-bottom: -30px !important;
   }
 
   .post_img_video {
     height: auto;
-    min-height: 300px;
   }
 }
 
@@ -1220,7 +1217,6 @@ nav.dark-mode {
   .post_div {
     margin: 0 !important;
     width: 100% !important;
-    min-height: 300px !important;
     height: auto;
     margin-left: 0px !important;
     position: relative;
@@ -1230,7 +1226,6 @@ nav.dark-mode {
 
   .post_img_video {
     height: auto;
-    min-height: 300px;
   }
 }
 
@@ -1296,7 +1291,6 @@ nav.dark-mode {
   .post_div {
     margin: 0 !important;
     width: 100% !important;
-    min-height: 300px !important;
     height: auto;
     margin-left: 0px !important;
     position: relative;
@@ -1306,7 +1300,6 @@ nav.dark-mode {
 
   .post_img_video {
     height: auto;
-    min-height: 300px;
   }
 }
 
@@ -1353,7 +1346,6 @@ nav.dark-mode {
   .post_div {
     margin: 0 !important;
     width: 100% !important;
-    min-height: 300px !important;
     height: auto;
     margin-left: 0px !important;
     position: relative;
@@ -1363,6 +1355,5 @@ nav.dark-mode {
 
   .post_img_video {
     height: auto;
-    min-height: 300px;
   }
 }
