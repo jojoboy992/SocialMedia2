@@ -72,7 +72,11 @@
             <div class="user_list">
                 {% for user in users %}
                 <div class="message_users" onclick="location.href='{% url 'chat_view' user.username %}'">
-                    <img src="{% static 'imgs/profile.png' %}" alt="" class="user_profile">
+                    {% if user.profile.profile_picture %}
+                        <img src="{{ user.profile.profile_picture.url }}" alt="" class="user_profile" style="border-radius: 100% !important;">
+                    {% else %}
+                        <img src="{% static 'imgs/profile.png' %}" alt="" class="user_profile" style="border-radius: 100% !important;">
+                    {% endif %}
                     <h4 class="username">{{ user.username }}</h4>
                     {% if user.unread_messages > 0 %}
                         <span class="new_messages_count">{{ user.unread_messages }}</span>
@@ -93,14 +97,21 @@
     
         <div class="messgae_section_div">
             {% if selected_user %}
-            <div class="user_header">
-                <div class="message_username_section">
-                    <img src="{% static 'imgs/profile.png' %}" alt="" class="message_username_profile">
-                    <h4 class="message_username">
-                        <a href="{% url 'profile' selected_user.username %}" style="text-decoration: none; color: black;">{{ selected_user.username }}</a>
-                    </h4>
+                <div class="user_header">
+                    <div class="message_username_section">
+            {% if selected_user.profile.profile_picture %}
+                <img src="{{ selected_user.profile.profile_picture.url }}" alt="" class="message_username_profile" style="border-radius: 100% !important;">
+            {% else %}
+                <img src="{% static 'imgs/profile.png' %}" alt="" class="message_username_profile" style="border-radius: 100% !important;">
+            {% endif %}
+                <h4 class="message_username">
+                    <a href="{% url 'profile' selected_user.username %}" style="text-decoration: none; color: black;">
+                {{ selected_user.username }}
+                    </a>
+                </h4>
+                    </div>
                 </div>
-            </div>            
+           
     
             <div class="main_messages">
                 {% for message in messages %}
@@ -218,7 +229,6 @@ function scrollToBottomOnLoad() {
 // Execute the function when the DOM content is fully loaded
 document.addEventListener('DOMContentLoaded', scrollToBottomOnLoad);
 
-// Function to send a message
 function sendMessage(event) {
     event.preventDefault();
 
@@ -227,23 +237,6 @@ function sendMessage(event) {
     const recipientUsername = "{{ selected_user.username }}";
 
     if (messageContent) {
-        const mainMessages = document.querySelector('.main_messages');
-        const tempMessageId = `message-${Date.now()}`;  // Temporary ID
-
-        // Display the sent message immediately with a temporary ID
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'sender_section';
-        messageDiv.id = tempMessageId;
-
-        messageDiv.innerHTML = `
-            <p class="sender_message_content" style="color: #ffffff;">${messageContent}</p>
-            <button class="delete-button" onclick="deleteMessage('${tempMessageId}')">🗑️</button>
-        `;
-        
-        mainMessages.appendChild(messageDiv);
-        scrollToBottom();
-
-        // Send the message to the server
         fetch('/send_message/', {
             method: 'POST',
             headers: {
@@ -256,20 +249,77 @@ function sendMessage(event) {
             })
         })
         .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
+            if (!response.ok) throw new Error('Network response was not ok');
             return response.json();
         })
         .then(data => {
-            messageInput.value = ''; // Clear input after sending
-            // Update the temporary message ID with the actual message ID
-            document.getElementById(tempMessageId).id = `message-${data.message_id}`;
+            messageInput.value = '';
+            // After successful send, refresh messages
+            fetchMessages();
         })
-        .catch(error => console.error('Error sending message:', error));
+        .catch(error => {
+            console.error('Error sending message:', error);
+        });
     }
 }
 
+
+function fetchMessages() {
+    const recipient = "{{ selected_user.username }}";
+
+    fetch(`/fetch_messages/${recipient}/`)
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            const mainMessages = document.querySelector('.main_messages');
+            mainMessages.innerHTML = ''; // 🧹 Clear everything to avoid any duplication
+
+            data.forEach(message => {
+                const messageDiv = document.createElement('div');
+                messageDiv.id = `message-${message.id}`;
+
+                if (message.sender === "{{ request.user.username }}") {
+                    messageDiv.className = 'sender_section';
+                    messageDiv.innerHTML = `
+                        <p class="sender_message_content" style="color: #ffffff;">${message.content}</p>
+                        <button class="delete-button" onclick="deleteMessage(${message.id})">🗑️</button>
+                    `;
+                } else {
+                    messageDiv.className = 'receiver_section';
+                    messageDiv.innerHTML = `<p class="receiver_message_content" style="color: #ffffff;">${message.content}</p>`;
+                }
+
+                mainMessages.appendChild(messageDiv);
+            });
+
+            scrollToBottom();
+        })
+        .catch(error => {
+            console.error("Error fetching messages:", error);
+        });
+}
+
+
+setInterval(fetchMessages, 10000);
+
+// Function to get CSRF token (if using Django)
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
 
 
 // Function to scroll to the bottom of the main_messages container
@@ -293,73 +343,6 @@ document.querySelector('.main_messages').addEventListener('scroll', function () 
         scrollToBottomBtn.style.display = 'none';
     }
 });
-
-
-
-// Function to fetch messages
-// Function to fetch messages
-function fetchMessages() {
-    const recipient = "{{ selected_user.username }}";
-
-    fetch(`/fetch_messages/${recipient}/`)
-        .then(response => {
-            if (!response.ok) {
-                console.error(`Failed to fetch messages: ${response.statusText}`);
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            const mainMessages = document.querySelector('.main_messages');
-
-            data.forEach(message => {
-                // Check if the message with this ID is already displayed
-                if (!document.getElementById(`message-${message.id}`)) {
-                    const messageDiv = document.createElement('div');
-                    messageDiv.id = `message-${message.id}`;
-
-                    if (message.sender === "{{ request.user.username }}") {
-                        messageDiv.className = 'sender_section';
-                        messageDiv.innerHTML = `
-                            <p class="sender_message_content" style="color: #ffffff;">${message.content}</p>
-                            <button class="delete-button" onclick="deleteMessage(${message.id})">🗑️</button>
-                        `;
-                    } else {
-                        messageDiv.className = 'receiver_section';
-                        messageDiv.innerHTML = `<p class="receiver_message_content" style="color: #ffffff;">${message.content}</p>`;
-                    }
-
-                    mainMessages.appendChild(messageDiv);
-                    scrollToBottom();
-                }
-            });
-        })
-        .catch(error => {
-            console.error("Error fetching messages:", error);
-        });
-}
-
-
-
-setInterval(fetchMessages, 10000);
-
-// Function to get CSRF token (if using Django)
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            // Does this cookie string begin with the name we want?
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-
 
 function deleteMessage(messageId) {
     // Immediately remove the message from the sender's view
@@ -390,7 +373,7 @@ function deleteMessage(messageId) {
     .catch(error => console.error('Error:', error));
 }
 
-fetchMessages();
+setTimeout(fetchMessages, 200);  // Let DOM update first
 
     </script>
 </body>

@@ -436,7 +436,7 @@ def profile(request, username):
             "followers": followers,  # Pass the followers
             "following_users": following_users,  # Pass the following users
         },
-    )
+    )   
 
 
 @login_required
@@ -491,12 +491,13 @@ def chat_view(request, username=None):
     # Get users who have either sent or received messages with the logged-in user
     users = User.objects.filter(
         Q(sent_messages__receiver=request.user) | Q(received_messages__sender=request.user)
-    ).exclude(username=request.user.username).distinct().annotate(
+    ).exclude(username=request.user.username).distinct().select_related('profile').annotate(
         unread_messages=Count(
             'sent_messages',
-            filter=Q(sent_messages__receiver=request.user, sent_messages__is_read=False)
-        )
+        filter=Q(sent_messages__receiver=request.user, sent_messages__is_read=False)
     )
+    )
+
 
     selected_user = None
     messages = []
@@ -508,7 +509,8 @@ def chat_view(request, username=None):
 
     if username:
         # Get the selected user for the chat
-        selected_user = get_object_or_404(User, username=username)
+        selected_user = get_object_or_404(User.objects.select_related('profile'), username=username)
+
 
         # Prevent sending messages to oneself
         if selected_user == request.user:
